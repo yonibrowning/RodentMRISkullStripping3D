@@ -25,7 +25,10 @@ def out_LabelHot_map_3D(img, seg_net, pre_paras, keras_paras,add_input_list=[]):
     
     addinputnum = len(add_input_list)
 
+    number_of_iterations = (length-patch_dims[0]+1)//strides[0]*(col-patch_dims[1]+1)//strides[1]*(row-patch_dims[2]+1)//strides[2]
     
+    print('Number of iterations:'+ str(number_of_iterations))
+    idx = 0
     """-----predict the whole image from two directions, small to large and large to small----"""
     for i in range(0, length-patch_dims[0]+1, strides[0]):
         for j in range(0, col-patch_dims[1]+1, strides[1]):
@@ -49,8 +52,9 @@ def out_LabelHot_map_3D(img, seg_net, pre_paras, keras_paras,add_input_list=[]):
                 
                 if keras_paras.img_format == 'channels_last':
                     cur_patch = np.transpose(cur_patch, (0, 2, 3, 4, 1))
-
                 cur_patch_output = seg_net.predict(cur_patch, batch_size=1, verbose=0)
+                print(idx)
+                idx+=1
 
                 # if there are multiple outputs
                 if isinstance(cur_patch_output,list):
@@ -68,6 +72,11 @@ def out_LabelHot_map_3D(img, seg_net, pre_paras, keras_paras,add_input_list=[]):
                 likelihood_map[i:i+label_dims[0], j:j+label_dims[1], k:k+label_dims[2]] \
                     = likelihood_map[i:i+label_dims[0], j:j+label_dims[1], k:k+label_dims[2]] + cur_patch_output
                 counter_map[i:i+label_dims[0], j:j+label_dims[1], k:k+label_dims[2]] += 1
+
+    number_of_iterations = (length-patch_dims[0]-1)//strides[0]*(col-patch_dims[1]-1)//strides[1]*(row-patch_dims[2]+1)//strides[2]
+    
+    print('Number of iterations:'+ str(number_of_iterations))
+    idx = 0
 
     for i in range(length, patch_dims[0]-1, -strides[0]):
         for j in range(col, patch_dims[1]-1, -strides[1]):
@@ -92,7 +101,9 @@ def out_LabelHot_map_3D(img, seg_net, pre_paras, keras_paras,add_input_list=[]):
                     cur_patch = np.transpose(cur_patch, (0, 2, 3, 4, 1))
 
                 cur_patch_output = seg_net.predict(cur_patch, batch_size=1, verbose=0)
-
+                print(idx)
+                idx+=1
+                
                 if isinstance(cur_patch_output,list):
                     cur_patch_output = cur_patch_output[keras_paras.outID]
                 cur_patch_output = np.squeeze(cur_patch_output)
